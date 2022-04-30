@@ -1,5 +1,17 @@
 ---
 
+- name: Fetch K3S releases
+  uri:
+    url: https://api.github.com/repos/k3s-io/k3s/releases
+    return_content: yes
+  register: k3s_releases
+  when: (k3s_version is not defined) or (k3s_version == "latest")
+
+- name: Determine the latest production-ready release
+  set_fact:
+    k3s_version: "{{ k3s_releases.content | from_json | json_query('[?prerelease == `false`].tag_name | [0]') }}"
+  when: k3s_releases.content is defined
+
 - name: Download k3s binary x64
   get_url:
     url: https://github.com/k3s-io/k3s/releases/download/{{ k3s_version }}/k3s
